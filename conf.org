@@ -1,0 +1,1313 @@
+#+title: Literate Emacs Configuration
+#+author: tiyano
+#+latex_class: doc
+#+options: h:6
+
+* File Headers
+
+  #+begin_src emacs-lisp :tangle lisp/init.el
+    ;;; init.el -*- lexical-binding: t; -*-  
+    ;; Author: Valentin Veluppillai <valentinveluppillai@gmail.com>
+    ;; Created: 05.10.20
+    ;; This file is not part of GNU Emacs.
+  #+end_src
+
+  #+begin_src emacs-lisp :tangle lisp/editor.el
+    ;;; editor.el -*- lexical-binding: t; -*-  
+    ;; Author: Valentin Veluppillai <valentinveluppillai@gmail.com>
+    ;; Created: 05.10.20
+    ;; This file is not part of GNU Emacs.
+  #+end_src
+
+  #+begin_src emacs-lisp :tangle lisp/interface.el
+    ;;; interface.el -*- lexical-binding: t; -*-  
+    ;; Author: Valentin Veluppillai <valentinveluppillai@gmail.com>
+    ;; Created: 05.10.20
+    ;; This file is not part of GNU Emacs.
+  #+end_src
+
+  #+begin_src emacs-lisp :tangle lisp/toolkit.el
+    ;;; toolkit.el -*- lexical-binding: t; -*-  
+    ;; Author: Valentin Veluppillai <valentinveluppillai@gmail.com>
+    ;; Created: 05.10.20
+    ;; This file is not part of GNU Emacs.
+  #+end_src
+
+  #+begin_src emacs-lisp :tangle lisp/visuals.el
+    ;;; visuals.el -*- lexical-binding: t; -*-  
+    ;; Author: Valentin Veluppillai <valentinveluppillai@gmail.com>
+    ;; Created: 05.10.20
+    ;; This file is not part of GNU Emacs.
+  #+end_src
+
+  #+begin_src emacs-lisp :tangle lisp/de.el
+    ;;; de.el -*- lexical-binding: t; -*-  
+    ;; Author: Valentin Veluppillai <valentinveluppillai@gmail.com>
+    ;; Created: 05.10.20
+    ;; This file is not part of GNU Emacs.
+  #+end_src
+
+* The Basics
+  :PROPERTIES:
+  :header-args: :tangle init.el
+  :END:
+** Package Management
+
+   First things first: Use +protection+ TLS and check certificates.
+   
+   #+name: tls
+   #+BEGIN_SRC emacs-lisp
+     (setq gnutls-verify-error t)
+     (setq tls-checktrust t)
+   #+END_SRC
+
+   I am using a combination of [[https://github.com/raxod502/straight.el][straight.el]] and [[https://github.com/jwiegley/use-package][use-package]] for package management.
+
+   #+name: straight-bootstrap
+   #+BEGIN_SRC emacs-lisp
+     (defvar bootstrap-version)
+     (let ((bootstrap-file (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+           (bootstrap-version 5))
+       (unless (file-exists-p bootstrap-file)
+         (with-current-buffer (url-retrieve-synchronously
+                               "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+                               'silent 'inhibit-cookies) (goto-char (point-max))
+                               (eval-print-last-sexp))) (load bootstrap-file nil 'nomessage))
+   #+END_SRC
+
+   #+name: use-package
+   #+BEGIN_SRC emacs-lisp
+     (straight-use-package 'use-package)
+     (setq straight-use-package-by-default 1)
+
+     (use-package bug-hunter)
+   #+END_SRC
+
+   #+RESULTS: use-package
+
+** Actually using this stuff
+
+   Now, after loading our package management tools, we can actually load
+   our config. This also includes tangling/byte-compiling this file if
+   it is out of date.x
+   
+   First, define a function that checks if all provided files are newer
+   than this config.
+
+   #+name: file-age-helper-function
+   #+begin_src emacs-lisp
+     (defun tiyano/check-if-newer-than-conf (files &optional dir)
+       "Compares the mtimes of every passed file and the configuration"
+       (or dir (setq dir (expand-file-name "lisp" user-emacs-directory)))
+       (or (mapcar #'(lambda (file)
+                       (file-newer-than-file-p
+                        (expand-file-name file dir)
+                        (expand-file-name "conf.org" dir)))
+                   files)))
+   #+end_src
+
+   A list containing the names of our tangeled files would also be helpful.   
+   
+   #+name: config-file-list
+   #+begin_src emacs-lisp
+     (defvar tiyano/config-file-list '("editor"
+                                       "interface"
+                                       "toolkit"
+                                       "visuals"
+                                       "de"))
+
+     (defvar tiyano/config-file-list-with-extensions (mapcar
+                                                      #'(lambda (s)
+                                                          (concat s ".el"))
+                                                      tiyano/config-file-list))
+   #+end_src
+
+   #+RESULTS: config-file-list
+   : tiyano/config-file-list-with-extensions
+
+   Now, tangle all our config files if they are out of
+   date.
+
+   #+name: tangle-old-files
+   #+begin_src emacs-lisp
+     (require 'org)
+     ;;(if (not (tiyano/check-if-newer-than-conf tiyano/config-file-list user-emacs-directory))
+     (org-babel-tangle-file (expand-file-name "conf.org" user-emacs-directory));;)
+   #+end_src
+
+   #+RESULTS: tangle-old-files
+   | /home/val/.config/emacs/init.el | /home/val/.config/emacs/lisp/de.el | /home/val/.config/emacs/lisp/visuals.el | /home/val/.config/emacs/lisp/toolkit.el | /home/val/.config/emacs/lisp/interface.el | /home/val/.config/emacs/lisp/editor.el | /home/val/.config/emacs/lisp/init.el |
+
+   Lastly, load the files.
+
+   #+name: load-config-files
+   #+begin_src emacs-lisp
+     (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+     (mapc 'load tiyano/config-file-list)
+   #+end_src
+
+   #+RESULTS: load-config-files
+   | editor | interface | toolkit | visuals | de |
+
+* The Editor
+  :PROPERTIES:
+  :header-args: :tangle lisp/editor.el
+  :END:
+  Emacs is most commonly seen as a text editor. This section only
+  concerns itself with editing text and in-buffer actions.
+
+** Auto-completion and Snippets
+
+   Though it can sometimes be annoying, autocompletion is an extremely
+   useful tool. I use [company] with the [company-box]
+   frontend. [company-lsp] provides integration with [lsp-mode]. Lastly,
+   the candidates are sorted with [company-prescient], but we will deal
+   with [prescient] itself later.
+
+   I like autocompletion to trigger with a prefix of 3 characters, after 0.3
+   seconds of delay, so that not as many suggestions are shown, and that
+   I can type without being interrupted. I also bind completion to M-TAB,
+   so that I can trigger it for shorter prefixes.
+   
+   #+name: autocompletion
+   #+begin_src emacs-lisp
+     (use-package company
+       :bind ("M-TAB" . company-complete)
+       :hook (after-init . global-company-mode)
+       :init
+       (use-package company-box
+         :if (display-graphic-p)
+         :hook (company-mode . company-box-mode))
+       :custom
+       ((company-idle-delay 0.3)
+        (company-minimum-prefix-length 3)
+        (company-selection-wrap-around t)))
+   #+end_src
+   
+   #+RESULTS: autocompletion
+   : company-complete
+
+   These Candidates need to be sorted in some way. Enter [orderless] and
+   [prescient].
+
+   #+name: candidate-sorting
+   #+begin_src emacs-lisp
+     (use-package prescient
+       :config
+       (prescient-persist-mode)
+       (use-package company-prescient
+         :config (company-prescient-mode 1)))
+
+     (use-package orderless
+       :custom ((orderless-component-seperator "[ &]")
+                (completion-styles 'orderless))
+       :custom (savehist-mode))
+   #+end_src
+
+   Packages like [[LSP]] provide code snippets for a bunch of languages (actually,
+   the language servers do), but this requires [yasnippet]. Ideally, my
+   snippets would just quietly integrate with autocompletion and behave
+   like any other candidate. Well then - do that!
+
+   #+name: snippets
+   #+begin_src emacs-lisp
+     (use-package yasnippet
+       :disabled
+       :after (company)
+       :hook (company-mode . yas-minor-mode)
+       :config
+       (add-to-list 'company-backends 'company-yasnippet)
+       (use-package yasnippet-snippets))
+   #+end_src
+
+   #+RESULTS: snippets
+
+** Copy/Paste | Kill/Yank
+
+   I found this super nice package called [consult], which offers a bunch
+   of functionality using =completing-read=. I will also refer to it in
+   other sections, but here, I cofigure it to be a visual kill ring.
+
+   #+name: kill-yank
+   #+begin_src emacs-lisp
+     (use-package consult
+       :bind ("M-y" . consult-yank-pop))
+   #+end_src
+
+   #+RESULTS: kill-yank
+   : consult-yank-pop
+
+** Indentation, Delimiters and visual parsing of code
+
+   [smart-parens] is a package for dealing with all kinds of delimiters,
+   I enable it for all programming modes.
+
+   #+name: smartparens
+   #+begin_src emacs-lisp
+     (use-package smartparens
+       :config
+       (require 'smartparens-config)
+       (turn-on-smartparens-mode)
+       (turn-on-show-smartparens-mode))
+   #+end_src
+
+   #+RESULTS: smartparens
+   : t
+
+   To quickly parse more complex delimiter constructs, I find it very helpful
+   to color different levels of delimiters.
+
+   #+name: rainbow-delimiters
+   #+begin_src emacs-lisp
+     (use-package rainbow-delimiters
+       :hook (prog-mode . rainbow-delimiters-mode)) 
+   #+end_src
+
+   Also, tabs lead to non-protable (at least visually) source files, so I don't use them.
+
+   #+name: no-tabs
+   #+BEGIN_SRC emacs-lisp 
+     (use-package emacs
+       :config (setq-default indent-tabs-mode nil))
+   #+END_SRC
+
+** Orientation
+   See wich line you are on, and what line that is.
+
+   #+name: line-hl-numbers
+   #+begin_src emacs-lisp
+     (use-package emacs
+       :config
+       (global-display-line-numbers-mode t)
+       (global-hl-line-mode t))
+   #+end_src
+** File types
+*** TODO Programming
+
+    In this section, we configure Emacs to properly deal with all the
+    languages I play with.
+**** System Executables
+
+     In order to find all system executables, load the path from shell
+     using [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]].
+
+     #+BEGIN_SRC emacs-lisp
+       (use-package exec-path-from-shell
+         :config (when (memq window-system '(mac ns x))
+                   (exec-path-from-shell-initialize)))
+     #+END_SRC
+
+**** LSP
+     The Language Server Protocol provides IDE features for many languages
+     and editors. I like to use [lsp-mode], an LSP Client for emacs.
+
+     [company-lsp] provides better integration with the autocompletion
+     framework.
+
+     #+name: lsp
+     #+begin_src emacs-lisp
+       (use-package lsp-mode
+         :defer t
+         :hook (lsp-mode . lsp-enable-which-key-integration)
+         :commands (lsp lsp-deferred)
+         :custom (lsp-keymap-perfix "C-c l")
+         :config
+         (use-package lsp-ui
+           :defer t
+           :commands lsp-ui-mode)
+         (use-package dap-mode
+           :defer t)
+         (use-package company-lsp
+           :after lsp-mode
+           :custom ((company-lsp-cache-candidates 'auto)
+                    (company-lsp-async t)
+                    (company-lsp-enable-snippet t)
+                    (company-lsp-enable-recompletion t))
+           :config (push 'company-lsp 'company-backends)))
+     #+end_src
+**** C and friends
+
+     C is the first language I learned, and it the [cc-mode] package
+     provides modes for it and a bunch of other languages.
+
+     #+name: c-lang
+     #+begin_src emacs-lisp
+       (use-package cc-mode
+         :straight (:type built-in)
+         :hook ((c-mode c++-mode)  . lsp-mode))
+     #+end_src
+     
+**** Rust
+
+     A language I am currently learning.
+
+     #+begin_src emacs-lisp
+       (use-package rust-mode
+         :custom (rust-format-on-save t)
+         :hook (rust-mode . lsp)
+         :config
+         (use-package cargo
+           :hook (rust-mode . cargo-minor-mode)))
+     #+end_src
+     
+*** Latex
+    #+name: auctex
+    #+begin_src emacs-lisp
+      (use-package tex
+        :straight auctex
+        :custom ((TeX-auto-save t)
+                 (TeX-parse-self t)
+                 (TeX-master nil)
+                 (reftex-plug-into-AUCTeX)
+                 (TeX-PDF-mode t)
+                 (TeX-view-program-selection '((output-pdf "PDF Tools")))
+                 (TeX-source-correlate-start-server t))
+        :hook ((LaTeX-mode LaTeX-math-mode)
+               (LaTeX-mode turn-on-reftex)
+               ('TeX-after-compilation-finished-functions
+                #'TeX-revert-document-buffer )))
+    #+end_src
+
+    #+RESULTS: auctex
+    | TeX-after-compilation-finished-functions |
+
+    #+begin_src emacs-lisp
+      (use-package bibtex
+        :custom
+        (bibtex-dialect 'biblatex)
+        :config
+        (bibtex-set-dialect 'biblatex))
+    #+end_src
+
+    #+RESULTS:
+    : t
+
+** Search and Navigation
+
+   I want to be able to quickly move and find things in the buffer.
+
+   For this, I cofigure consult to be my default way of
+   searching inside a buffer (basically like swiper).
+
+   #+name: in-buffer-search
+   #+begin_src emacs-lisp
+     (use-package consult
+       :bind ("C-s" . consult-line))
+   #+end_src
+
+   I also like to be to jump my cursor to any position I can see
+   quickly. [avy-jump] offers this possibility.
+
+   #+name: in-buffer-jump
+   #+begin_src emacs-lisp
+     (use-package avy
+       :bind (("C-." . avy-goto-word-1)
+              ("C-:" . avy-goto-char)))
+   #+end_src
+
+   I also use consult as a more visual replacement for ~goto-line~ and other navigation functionality.
+
+
+   #+begin_src emacs-lisp
+     (use-package consult
+       :bind (("M-g g" . consult-goto-line)
+              ("M-g G" . consult-imenu)))
+   #+end_src
+
+   #+RESULTS:
+   : consult-imenu
+
+** Keyboard Macros
+
+   Consult back at it again.
+
+   #+begin_src emacs-lisp
+     (use-package consult
+       :bind ("C-x E" . consult-kmacro))
+   #+end_src
+
+   #+RESULTS:
+   : consult-kmacro
+
+** TODO Spell Checkers
+   Maybe vale, maybe flychek-ispell, maybe spell-fu
+
+   #+name: spell-checking
+   #+begin_src emacs-lisp
+     (use-package flyspell
+       :disabled
+       :custom ((ispell-program-name "hunspell")
+                (ispell-dictionary "en_US"))
+       :hook ((text-mode flyspell-mode)
+              (prog-mode flyspell-prog-mode))
+       :custom
+       (ispell-set-spellchecker-params)
+       (ispell-hunspell-add-multi-dic "en_US,de_AT,de_DE"))
+   #+end_src
+
+   #+RESULTS: spell-checking
+
+** Syntax Checker
+
+   Flycheck! Check Syntax in all programming buffers.
+
+   #+name: syntax-checker
+   #+BEGIN_SRC emacs-lisp
+     (use-package flycheck
+       :hook (prog-mode . flycheck-mode))
+
+     (use-package flycheck-pos-tip ;; is this working?
+       :hook (prog-mode . flycheck-pos-tip-mode))
+   #+END_SRC
+
+** Undo/Redo
+   I never got used to these standard bindings, and because emacs is also my window
+   manager, I don't care about suspending it.
+
+   #+name: undo
+   #+begin_src emacs-lisp
+     (use-package undo-tree
+       :bind  (("C-z" . undo-tree-undo)
+               ("C-S-z" . undo-tree-redo))
+       :config
+       (global-undo-tree-mode))
+   #+end_src
+   
+** Scrolling
+
+   Emacs has very jumpy scroll behavior by default.
+
+   #+name: scrolling
+   #+begin_src emacs-lisp
+     (use-package emacs
+       :custom ((mouse-wheel-scroll-ammount '(1))
+                (mouse-wheel-progressive-speed nil)
+                (scroll-conservatively 101)))
+   #+end_src
+   
+* The Interface
+  :PROPERTIES:
+  :header-args: :tangle lisp/interface.el
+  :END:
+** No Littering
+
+   Emacs likes creating a lot of files. Backups and lockfiles will be in
+   every directory if you dont change the default behavior. Luckily,
+   [no-littering] exists.
+
+   #+name: no-littering
+   #+begin_src emacs-lisp
+     (use-package no-littering
+       :config
+       (require 'recentf)
+       (add-to-list 'recentf-exclude no-littering-var-directory)
+       (add-to-list 'recentf-exclude no-littering-etc-directory)
+       :custom ((auto-save-file-name-transforms
+                 ((".*" (no-littering-expand-var-file-name "auto-save/") t)))))
+   #+end_src
+
+   #+RESULTS: no-littering
+
+   Store customization in its own file.
+
+   #+name: custom-file
+   #+begin_src emacs-lisp
+     (use-package emacs
+       :custom (custom-file (no-littering-expand-etc-file-name "custom.el"))
+       :init (load custom-file 'noerror))
+   #+end_src
+
+   #+RESULTS: custom-file
+
+** Cleanup
+
+   Emacs comes with default settings that I dont really enjoy.
+
+   I dont need mouse-based interaction, and I set emacs to save stuff
+   between sessions (and also save files when I close it).
+
+   #+name: declutter-interface
+   #+begin_src emacs-lisp
+     (use-package emacs
+       :custom ((inhibit-startup-message t)
+                (inhibit-splash-screen t)
+                (x-gtk-use-system-tooltips nil)
+                (use-dialog-box nil)
+                (ring-bell-function 'ignore))
+       :config
+       (scroll-bar-mode -1)
+       (tool-bar-mode 0)
+       (tooltip-mode 0)
+       (menu-bar-mode 0))
+   #+end_src
+
+   #+RESULTS: declutter-interface
+   : t
+
+   #+name: simplify-interface
+   #+begin_src emacs-lisp
+     (use-package emacs
+       :custom ((confirm-kill-processes nil)
+                (global-auto-revert-non-file-buffers t)
+                (auto-revert-verbose nil)
+                (undo-tree-auto-save-history t)
+                (undo-tree-history-directory-alist
+                 ((".*" . (concat user-emacs-directory "undo/")))))
+
+       :hook ((delete-frame-functions save-some-buffers))
+       :config
+       (defalias 'yes-or-no-p 'y-or-n-p)
+       (global-auto-revert-mode t))
+   #+end_src
+
+   #+RESULTS: simplify-interface
+   | emacs |
+
+** Inter-Buffer Navigation
+
+   I said [consult] would come back, and here it is.
+
+   #+name: buffer-switching
+   #+begin_src emacs-lisp
+     (use-package consult
+       :bind ("C-x C-b" . consult-buffer))
+   #+end_src
+
+   For a buffer list and acting on many of them, I use [ibuffer]. Consider
+   switching to [bufler].
+
+   #+name: buffer-mangement
+   #+begin_src emacs-lisp
+     (use-package ibuffer
+       :demand
+       :bind (
+              ("C-x b" . ibuffer)
+              ("C-x k" . kill-this-buffer))
+       :hook (ibuffer-mode . tiyano/ibuffer-use-default-filter-group)
+       :custom ((ibuffer-saved-filter-groups
+                 (quote (("default"
+                          ("exwm" (or (name . "^\\*system-packages\\*$")
+                                      (name . "^\\*Wi-Fi Networks\\*$")
+                                      (name . "^\\*XELB-DEBUG\\*$")
+                                      (mode . exwm-mode)))
+                          ("magit" (name . "^magit.*:"))
+                          ("dired" (or (mode . dired-mode)
+                                       (mode . wdired-mode)))
+                          ("code" (or (mode . prog-mode)
+                                      (mode . c-mode)
+                                      (mode . Rust)
+                                      (mode . Emacs-Lisp)
+                                      (mode . Conf)
+                                      (name . "*.el*$")))
+                          ("org"   (mode . org-mode))
+                          ("term" (mode . vterm-mode))
+                          ("pdf" (mode . PDFView))
+                          ("emacs" (or (name . "^\\*package.*results\\*$")
+                                       (name . "^\\*Shell.*Output\\*$")
+                                       (name . "^\\*Compile-Log\\*$")
+                                       (name . "^\\*Completions\\*$")
+                                       (name . "^\\*Backtrace\\*$")
+                                       (name . "^\\*dashboard\\*$")
+                                       (name . "^\\*Messages\\*$")
+                                       (name . "^\\*scratch\\*$")
+                                       (name . "^\\*straight-process\\*$")
+                                       (name . "^\\*Warning\\*$")
+                                       (name . "^\\*info\\*$")
+                                       (name . "^\\*Help\\*$"))))))))
+       :config
+       (defun tiyano/ibuffer-use-default-filter-group ()
+         "Switch to the intended filter group."
+         (ibuffer-switch-to-saved-filter-groups "default")))
+   #+end_src
+
+   #+RESULTS: buffer-mangement
+   : kill-this-buffer
+
+** Dashboard
+
+   I like to have a dashboard open when opening emacs.
+
+   #+name: dashboard
+   #+BEGIN_SRC emacs-lisp
+     (use-package dashboard
+       :init (dashboard-setup-startup-hook)
+       :custom ((dashboard-items '((recents . 10)))
+                (initial-buffer-choice #'tiyano/dashboard-or-scratch)
+                (dashboard-set-init-info t)
+                (show-week-agenda-p t)
+                (dashboard-startup-banner 'logo)
+                (dashboard-center-content t)
+                (dashboard-set-heading-icons t)
+                (dashboard-set-file-icons t)
+                (inhibit-startup-screen t)
+                (show-week-agenda-p t)
+                (dashboard-items '((agenda . 10)
+                                   (recents  . 10)
+                                   (projects . 10)
+                                   (bookmarks . 10)
+                                   (registers . 10))))
+
+       :hook (dashboard-mode . tiyano/dashboard-immortal)
+       :config
+       (cd "~")
+
+       (defun tiyano/dashboard-immortal ()
+         "Make the dashboard buffer immortal."
+         (emacs-lock-mode 'kill))
+
+       (defun dashboard-refresh-immortal-buffer ()
+         "Refresh the immortal dashboard buffer."
+         (interactive)
+         (emacs-lock-mode nil)
+         (dashboard-refresh-buffer)
+         (emacs-lock-mode 'kill))
+
+       (defun tiyano/dashboard-or-scratch ()
+         "Open either dashboard or the scratch buffer."
+         (or (get-buffer "*dashboard*")
+             (get-buffer "*scratch*"))))
+   #+END_SRC
+
+** Discoverable Keybindings
+
+   I cannot remember all the available keybinds - but [which-key]
+   does. [which-key] shows all keybindings currently available.
+
+   #+name: discoverable-keybinds
+   #+begin_src emacs-lisp
+     (use-package which-key
+       :demand
+       :diminish
+       :custom ((which-key-separator " ")
+                (which-key-prefix-prefix "+")
+                (which-key-idle-delay 0.7)
+                (which-key-show-early-on-C-h t)
+                (which-key-idle-secondary-delay 0))
+       :bind (("C-h C-b" . which-key-show-top-level))
+       :config
+       (which-key-setup-side-window-bottom)
+       (which-key-mode))
+   #+end_src
+
+** Minibuffer Completion
+
+   This also uses ~orderless~ and ~prescient~ from the autocompletion section.
+
+   #+name: minibuffer-completion
+   #+begin_src emacs-lisp
+     (use-package selectrum
+       :custom ((orderless-skip-highlighting (lambda () selectrum-is-active))
+                (selectrum-highlight-candidates-function
+                 #'orderless-highlight-matches))
+       :config
+       (use-package selectrum-prescient
+         :config (selectrum-prescient-mode 1))
+       (selectrum-mode 1))
+   #+end_src
+
+** Modeline
+
+   #+name: modeline
+   #+begin_src emacs-lisp
+   #+end_src
+
+   #+name: hide-minor-modes
+   #+begin_src emacs-lisp
+     (use-package minions
+       :config (minions-mode))
+   #+end_src
+
+** Window Splitting
+
+   When I split my Window using the standard keybinds ~C-x 3~ or ~C-x 2~,
+   I want to have the new window show a list of all available buffers and
+   be selected.
+
+   #+name: window-splitting
+   #+begin_src emacs-lisp
+     (defun tiyano/split-window-right-and-switch ()
+       "Split the window to the right, switch to the new window and open ibuffer."
+       (interactive)
+       (split-window-right)
+       (other-window 1)
+       (ibuffer))
+
+     (defun tiyano/split-window-below-and-switch ()
+       "Split the window to the right, switch to the new window and open ibuffer."
+       (interactive)
+       (split-window-below)
+       (other-window 1)
+       (ibuffer))
+
+     (unbind-key "C-x 3")
+     (bind-key "C-x 3" 'tiyano/split-window-right-and-switch)
+     (unbind-key "C-x 2")
+     (bind-key "C-x 2" 'tiyano/split-window-below-and-switch)
+   #+end_src
+
+** Project Handling
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package projectile
+       :config
+       (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+       (projectile-mode 1))
+   #+end_src
+
+   #+RESULTS:
+   : t
+   
+* The Toolkit
+  :PROPERTIES:
+  :header-args: :tangle lisp/toolkit.el
+  :END:
+** Org Mode
+   The thing that got me into Emacs, and I am not even close to using all
+   of its capabilities.
+
+   #+name: org
+   #+begin_src emacs-lisp
+     (use-package org
+       :straight (:type built-in)
+       :custom (org-startup-indented t))
+   #+end_src
+
+*** Tasks
+**** States
+     #+name: task-states
+     #+begin_src emacs-lisp
+       (use-package org
+         :straight (:type built-in)
+         :custom (org-todo-keywords '((sequence "TODO(t)" "IN PROGRESS(p!/!)" "WAIT(w)" "DELEGATED(e)" "|" "DONE(d)")
+                                      (sequence "LEARN(l)" "|" "REHEARSE(r)" "DONE(d)"))))
+     #+end_src
+
+**** Capture
+
+     Capture Templates
+     
+     #+name: capture
+     #+begin_src emacs-lisp
+       (use-package org
+         :straight (:type built-in)
+         :custom ((org-outline-path-complete-in-steps nil)
+                  (org-refile-targets '((nil :maxlevel . 9)
+                                        (org-agenda-files :maxlevel . 9)))
+                  (org-refile-use-outline-path t)
+                  (org-default-notes-file "~/Documents/notes.org")
+                  (org-capture-templates '(("a" "Assignment" entry
+                                            (file+headline "~/Documents/notes.org" "Inbox")
+                                            "* TODO %^C %?\n DEADLINE: %^{DEADLINE}T SCHEDULED: %^{SCHEDULE}t")
+                                           ("e" "Event" entry
+                                            (file+headline "~/Documents/notes.org" "Inbox")
+                                            "* %^C \n %^T\n%?")
+                                           ("t" "Task" entry
+                                            (file+headline "~/Documents/notes.org" "Inbox")
+                                            "* TODO %^C %?\n DEADLINE: %^{DEADLINE}T SCHEDULED: %^{SCHEDULE}t")
+                                           ("s" "Subject Matter" entry
+                                            (file+headline "~/Documents/notes.org" "Inbox")
+                                            "* LEARN %^C %?\n ")))))
+     #+end_src
+
+**** TODO Agenda
+
+     #+name: agenda
+     #+begin_src emacs-lisp
+       (use-package org
+         :straight (:type built-in))
+     #+end_src
+
+**** TODO Calendar
+
+     #+name: calendar
+     #+begin_src emacs-lisp
+       (use-package org
+         :straight (:type built-in)
+         :config (use-package calfw
+                   :config (use-package calfw-org
+                             :custom (cfw_org-overwrite-default-keybinding t))))
+
+     #+end_src
+
+*** Org Export
+
+    I also use org for writing documents - using a markup language is much
+    more comfortable than \LaTeX syntax.
+
+**** Latex
+     #+name: ox-latex-encoding
+     #+begin_src emacs-lisp
+       (use-package org
+         :straight (:type built-in)
+         :custom (org-latex-inputenc-alist '(("utf8" . "utf8x"))))
+     #+end_src
+
+     I use a bunch of different classes, though Document is the one I use
+     most often.
+***** Document Class
+
+      Using the IBM Plex font, code exports with syntax highlighting and
+      clean paragraphs.
+
+      #+name: latex-doc
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config (with-eval-after-load 'ox-latex
+                    (add-to-list 'org-latex-classes
+                                 '("doc"
+                                   "\\documentclass[14pt]{article}
+            \\usepackage[T1]{fontenc}
+            \\usepackage[sfdefault]{plex-sans}
+            \\usepackage[sb]{plex-mono}
+            \\usepackage{plex-serif}
+            \\usepackage{booktabs}
+            \\usepackage[margin=2cm]{geometry}
+            \\usepackage{parskip}
+            \\usepackage[AUTO]{babel}
+            \\usepackage[hidelinks]{hyperref}
+            \\usepackage{xcolor}
+            \\usepackage{minted}"
+                                   ("\\section{%s}" . "\\section*{%s}")
+                                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))))
+      #+end_src
+***** Essay Class
+      The class I need to use for assignments.
+
+      #+name: latex-essay
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config (with-eval-after-load 'ox-latex
+                    (add-to-list 'org-latex-classes
+                                 '("essay"
+                                   "\\documentclass{article}
+              \\usepackage[T1]{fontenc}
+              \\usepackage{helvet}
+              \\renewcommand{\\familydefault}{\\sfdefault}
+              \\usepackage{booktabs}
+              \\usepackage[margin=2cm]{geometry}
+              \\usepackage{parskip}
+              \\linespread{2}
+              \\usepackage[AUTO]{babel}
+              \\usepackage[hidelinks]{hyperref}
+              \\usepackage{xcolor}
+              \\usepackage{fancyhdr}
+              \\pagestyle{fancy}
+              \\fancyhf{}
+              \\rhead{Valentin Veluppillai}
+              \\lhead{5AHEL}"
+                                   ("\\section*{%s}" . "\\section*{%s}")
+                                   ("\\subsection*{%s}" . "\\subsection*{%s}")
+                                   ("\\subsubsection*{%s}" . "\\subsubsection*{%s}")
+                                   ("\\paragraph*{%s}" . "\\paragraph*{%s}")
+                                   ("\\subparagraph*{%s}" . "\\subparagraph*{%s}")))))
+      #+end_src
+***** A different essay class
+      Another class I need to use for assignments.
+
+      #+name: latex-frrr
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config (with-eval-after-load 'ox-latex
+                    (add-to-list 'org-latex-classes
+                                 '("frrr"
+                                   "\\documentclass{article}
+              \\usepackage{helvet}
+              \\renewcommand{\\familydefault}{\\sfdefault}
+              \\usepackage{booktabs}
+              \\usepackage[margin=2cm]{geometry}
+              \\usepackage{parskip}
+              \\linespread{2}
+              \\usepackage[AUTO]{babel}
+              \\usepackage[hidelinks]{hyperref}
+              \\usepackage{xcolor}
+              \\usepackage{fancyhdr}
+              \\pagestyle{fancy}
+              \\fancyhf{}"
+                                   ("\\section{%s}" . "\\section{%s}")
+                                   ("\\subsection{%s}" . "\\subsection{%s}")
+                                   ("\\subsubsection{%s}" . "\\subsubsection{%s}")
+                                   ("\\paragraph{%s}" . "\\paragraph{%s}")
+                                   ("\\subparagraph{%s}" . "\\subparagraph{%s}")))))
+      #+end_src
+
+      #+RESULTS: latex-frrr
+      | frrr | \documentclass{article} |
+
+***** TODO D&D Class
+
+      If I ever get to writing a D&D adventure properly, I can use this to
+      make a nice D&D-style document. I am using a fork of the repo because
+      I found some mistake, will check if it has been fixed upstream.
+
+      #+name: latex-dnd
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config (use-package ox-dnd
+                    :straight (:repo "git@github.com:valentin-veluppillai/emacs-org-dnd.git"))
+          (add-hook 'org-mode-hook
+                    (lambda ()
+                      (add-to-list 'load-path "~/.emacs.d/straight/repos/emacs-org-dnd/")
+                      (require 'ox-dnd))))
+      #+end_src
+
+***** Presentation Class
+
+      For Beamer Presentations.
+
+      #+name: latex-presentation
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config
+          (with-eval-after-load 'ox-latex
+            (add-to-list 'org-latex-classes
+                         '("presentation"
+                           "\\documentclass[presentation]{beamer}
+          \\usetheme{metropolis}
+          \\usepackage[T1]{fontenc}
+          \\usepackage[sfdefault]{plex-sans}
+          \\usepackage[sb]{plex-mono}
+          \\usepackage{plex-serif}
+          \\usepackage{booktabs}
+          \\usepackage{parskip}
+          \\usepackage[AUTO]{babel}
+          \\usepackage{xcolor}"           
+                           ("\\section{%s}" . "\\section*{%s}")
+                           ("\\subsection{%s}" . "\\subsection*{%s}")
+                           ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))))
+      #+end_src
+***** TODO CV Class
+      Turn this into a proper export backend.
+
+      I also use Org for my CV.
+
+      #+name: latex-cv
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config
+          (use-package ox-moderncv
+            :straight (:repo "https://gitlab.com/Titan-C/org-cv.git")
+            :load-path ("~/.emacs.d/straight/repos/org-cv") 
+            :init (require 'ox-moderncv)))
+      #+end_src
+
+***** Code Highlighting
+
+      Some of my latex classes use syntax highlighting via minted.
+
+      #+name: latex-syntax-highlighting
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :custom ((org-latex-listings 'minted)
+                   (org-latex-pdf-process '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+                                            "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))))
+      #+end_src
+
+*** Visuals
+    Make Org look a bit nicer.
+
+***** Headings
+      Use [org-superstar] for fancier headings.
+
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config (use-package org-superstar))
+      #+end_src
+
+***** Hide Some Markup
+
+      I also hide source block markup, but I am not sure wheter I actually prefer
+      it over seeing org markup.
+
+      #+name: hide-source-block-markup
+      #+begin_src emacs-lisp
+        (use-package org
+          :straight (:type built-in)
+          :config
+          (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "[")
+                                                 ("#+END_SRC" . "]")
+                                                 ("#+begin_src" . "[")
+                                                 ("#+end_src" . "]")
+                                                 ("#+RESULTS:" . ">")))
+          (setq prettify-symbols-unprettify-at-point 'right-edge)
+          (add-hook 'org-mode-hook 'prettify-symbols-mode))
+      #+end_src
+
+*** Dealing with Code
+
+    Pressing <tab> in a source block should perform the same action that
+    it would in the languages' major mode.
+
+    #+name: org-native-source-tabs
+    #+begin_src emacs-lisp
+      (use-package org
+        :straight (:type built-in)
+        :custom (org-src-tab-acts-natively t))
+    #+end_src
+
+    Load more languages in Babel
+
+    #+name: babel-languages
+    #+begin_src emacs-lisp
+      (use-package org
+        :straight (:type built-in)
+        :config (org-babel-do-load-languages
+                 'org-babel-load-languages
+                 '((emacs-lisp . t)
+                   (python . t))))
+    #+end_src
+
+** D&D
+
+   I am a DM and player, I use emacs, guess whats next.
+
+   #+name: d&d
+   #+begin_src emacs-lisp
+     (use-package org-d20)
+   #+end_src
+
+** PDF
+
+   #+name: pdf
+   #+begin_src emacs-lisp
+     (use-package pdf-tools
+       :config
+       (pdf-loader-install)
+       (scroll-bar-mode -1)
+       (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward-regexp))
+   #+end_src
+
+** REST Client
+
+   #+name: rest-client
+   #+begin_src emacs-lisp
+     (use-package restclient)
+   #+end_src
+
+** Magit
+   Antoher one of emacs' killer applications
+
+   #+begin_src emacs-lisp
+     (use-package magit
+       :bind ("C-c g" . magit-status))
+   #+end_src
+
+   #+RESULTS:
+   : magit-status
+
+* The Visuals
+  :PROPERTIES:
+  :header-args: :tangle lisp/visuals.el
+  :END:
+** Font
+
+   While I do regularly change fonts, I am currently using IBM Plex Mono.
+
+   #+name: font
+   #+begin_src emacs-lisp
+     (use-package emacs
+       :config
+       (defvar tiyano/font-family "IBM Plex Mono Semibold")
+       (defvar tiyano/monospace-font-family tiyano/font-family)
+       (defvar tiyano/variable-font-family "IBM Plex Sans")
+       (defvar tiyano/font-size 14)
+
+       (set-face-attribute 'default nil
+                           :family tiyano/font-family
+                           :height (* tiyano/font-size 10))
+       (set-face-attribute 'variable-pitch nil
+                           :family tiyano/variable-font-family
+                           :height 1.0)
+       (set-face-attribute 'fixed-pitch nil
+                           :family tiyano/monospace-font-family
+                           :height 1.0))
+   #+end_src
+
+   #+RESULTS: font
+   : t
+
+   I also use all-the-icons to visually enhance some Packages.
+
+   #+name: icons
+   #+begin_src emacs-lisp
+     (use-package all-the-icons
+       :custom (inhibit-compacting-font-caches t)
+       :config
+       (use-package all-the-icons-dired
+         :hook (dired-mode . all-the-icons-dired-mode))
+       (use-package all-the-icons-ibuffer
+         :config (all-the-icons-ibuffer-mode)
+         :custom (all-the-icons-ibuffer-human-readable-size t)))
+   #+end_src
+
+** Theme
+
+   After an theme-hopping for what feels like eternity, I think I have
+   finally settled for a the =modus-themes=, which offer really good
+   readability and good customizaion. Also, they use a lot of purple,
+   which is always a plus.
+
+   #+begin_src emacs-lisp
+     (use-package modus-themes
+       :init
+       (setq modus-themes-bold-constructs t
+             modus-themes-slanted-constructs t
+             modus-themes-syntax 'green-strings
+             modus-themes-links 'faint
+             modus-themes-prompts 'subtle-accented
+             modus-themes-mode-line 'borderless
+             modus-themes-completions 'opinionated
+             modus-themes-fringes nil
+             modus-themes-lang-checkers 'straight-underline
+             modus-themes-hl-line 'nil
+             modus-themes-subtle-line-numbers t
+             modus-themes-paren-match 'intense-bold
+             modus-themes-region 'bg-only
+             modus-themes-org-blocks nil
+             modus-themes-headings nil
+             modus-themes-variable-pitch-ui nil
+             modus-themes-variable-pitch-headings nil)
+       (modus-themes-load-themes)
+       :config
+       (modus-themes-load-vivendi)
+       :bind ("<f6>" . modus-themes-toggle))
+   #+end_src 
+
+   #+RESULTS:
+   : modus-themes-toggle
+
+* The Desktop Environment
+  :PROPERTIES:
+  :header-args: :tangle lisp/de.el
+  :END:
+** Window Manager
+
+   You probably know the joke about emacs being a great OS - this is a
+   good step towards it. It is only started when the proper environment
+   variable is set.
+
+   #+name: window-manager
+   #+begin_src emacs-lisp
+     (use-package exwm
+       :init
+       (require 'exwm-systemtray)
+       (exwm-systemtray-enable)
+
+       (use-package exwm-edit)
+
+       (use-package cannon
+         :straight (:host github :repo "lambdart/cannon"))
+
+       (use-package gpastel
+         :hook (gpastel-mode . exwm-init-hook))
+
+       (defun start-applets ()
+         "Start a few applets, like nm-applet"
+         (start-process-shell-command
+          "Network Manager Applet" nil "nm-applet")
+         (start-process-shell-command
+          "PulseAudio Applet" nil "pasystray")
+         (start-process-shell-command
+          "Blueman Applet" nil "blueman-applet")
+         (start-process-shell-command
+          "lemonbar" nil "~/.config/lemonbar/bar.sh | lemonbar -g x36 -f \"IBM Plex Mono Semibold\" -f \"Symbols Nerd Font\" -F \"#ebdbb2\" -B \"#282828\" -u 4 -U \"#b16286\" &")
+         (start-process-shell-command
+          "dunst" nil "dunst")
+         (start-process-shell-command
+          "gpaste" nil "gpaste-client start"))
+
+       (defun tiyano/kill-x-buffer ()
+         "Kill current buffer and its associated window if its an X buffer"
+         (interactive)
+         (if (eq major-mode "exwm-mode") ;; is x buffer
+             ((kill-this-buffer) ;; kill this buffer and close window
+              (delete-window))
+           (message "Not an X buffer")))
+
+       (start-applets)
+
+       :hook
+       (exwm-update-class . (lambda () (exwm-workspace-rename-buffer exwm-class-name)))
+
+       :custom
+       (exwm-layout-show-all-buffers t)
+       (exwm-workspace-show-all-buffers t)
+       (exwm-input-global-keys
+        `(([?\s-W] . exwm-workspace-switch)
+          ([?\s-c] . tiyano/kill-x-buffer)
+          ([s-return] . multi-vterm)
+          ([s-tab] . vterm)
+          ([?\s-e] . dired-jump)
+          ([?\s-T] . exwm-reset)
+          ([?\s-f] . exwm-layout-toggle-fullscreen)
+          ([?\s- ] . cannon-launch)
+          ([?\s-0] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+          ([?\s-1] . (lambda () (interactive) (exwm-workspace-switch-create 1)))
+          ([?\s-2] . (lambda () (interactive) (exwm-workspace-switch-create 2)))
+          ([?\s-3] . (lambda () (interactive) (exwm-workspace-switch-create 3)))
+          ([?\s-4] . (lambda () (interactive) (exwm-workspace-switch-create 4)))
+          ([?\s-5] . (lambda () (interactive) (exwm-workspace-switch-create 5)))
+          ([?\s-6] . (lambda () (interactive) (exwm-workspace-switch-create 6)))
+          ([?\s-7] . (lambda () (interactive) (exwm-workspace-switch-create 7)))
+          ([?\s-8] . (lambda () (interactive) (exwm-workspace-switch-create 8)))
+          ([?\s-9] . (lambda () (interactive) (exwm-workspace-switch-create 9)))))
+       (exwm-input-simulation-keys
+        '(([?\C-w] . [?\C-x])
+          ([?\M-w] . [?\C-c])
+          ([?\C-y] . [?\C-v])
+          ([?\C-b] . [left])
+          ([?\C-f] . [right])
+          ([?\C-p] . [up])
+          ([?\C-n] . [down])
+          ([?\C-a] . [home])
+          ([?\C-e] . [end])
+          ([?\M-v] . [prior])
+          ([?\C-v] . [next])
+          ([?\C-d] . [delete])
+          ([?\C-k] . [S-end delete])
+          ([?\C-s] . [?\C-f])))
+       :config (exwm-enable))
+   #+end_src
+
+   #+RESULTS: window-manager
+
+** Program Launcher
+
+   #+begin_src emacs-lisp
+     (use-package cannon
+       :straight (:host github :repo "lambdart/cannon"))
+   #+end_src
+
+** Keybinds
+
+   For things like brightness und volume control.
+
+   #+begin_src emacs-lisp
+     (use-package desktop-environment
+       :after exwm
+       :custom
+       ((desktop-environment-update-exwm-global-keys :global))
+       :config
+       (desktop-environment-mode))
+   #+end_src
+
+** Terminal Emulator
+   #+begin_src emacs-lisp
+     (use-package vterm
+       :demand
+       :config
+       (use-package multi-vterm))
+   #+end_src
+
+   
+   
