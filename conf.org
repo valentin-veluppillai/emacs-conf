@@ -51,6 +51,7 @@
 :PROPERTIES:
 :header-args: :tangle init.el
 :END:
+
 ** Package Management
 
 First things first: Use +protection+ TLS and check certificates.
@@ -309,6 +310,7 @@ See wich line you are on, and what line that is.
 
 In this section, we configure Emacs to properly deal with all the
 languages I play with.
+
 **** System Executables
 
 In order to find all system executables, load the path from shell
@@ -321,6 +323,7 @@ using [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]].
 #+END_SRC
 
 **** LSP
+
 The Language Server Protocol provides IDE features for many languages
 and editors. I like to use [lsp-mode], an LSP Client for emacs.
 
@@ -1107,7 +1110,6 @@ Some of my latex classes use syntax highlighting via minted.
 
 *** Visuals
 Make Org look a bit nicer.
-
 ***** Headings
 Use [org-superstar] for fancier headings.
 
