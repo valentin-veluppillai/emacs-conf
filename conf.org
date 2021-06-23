@@ -131,9 +131,13 @@ date.
 
 #+name: tangle-old-files
 #+begin_src emacs-lisp
-  (require 'org)
-  ;;(if (not (tiyano/check-if-newer-than-conf tiyano/config-file-list user-emacs-directory))
-  (org-babel-tangle-file (expand-file-name "conf.org" user-emacs-directory));;)
+  (let ((gc-cons-threshold most-positive-fixnum))
+    (use-package org
+      :demand
+      :straight (:type built-in)
+      :mode ("\\.org" . org-mode))
+    ;;(if (not (tiyano/check-if-newer-than-conf tiyano/config-file-list user-emacs-directory))
+    (org-babel-tangle-file (expand-file-name "conf.org" user-emacs-directory)))
 #+end_src
 
 #+RESULTS: tangle-old-files
