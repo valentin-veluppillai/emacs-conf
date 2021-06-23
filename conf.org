@@ -1227,23 +1227,23 @@ Antoher one of emacs' killer applications
 :END:
 ** Font
 
-While I do regularly change fonts, I am currently using IBM Plex Mono.
+While I do regularly change fonts, I am currently using Roboto.
 
 #+name: font
 #+begin_src emacs-lisp
   (use-package emacs
     :config
-    (defvar tiyano/font-family "IBM Plex Mono Semibold")
+    (defvar tiyano/font-family "Roboto Mono")
     (defvar tiyano/monospace-font-family tiyano/font-family)
-    (defvar tiyano/variable-font-family "IBM Plex Sans")
-    (defvar tiyano/font-size 14)
+    (defvar tiyano/variable-font-family "Roboto Slab")
+    (defvar tiyano/font-size 13)
 
     (set-face-attribute 'default nil
                         :family tiyano/font-family
                         :height (* tiyano/font-size 10))
     (set-face-attribute 'variable-pitch nil
                         :family tiyano/variable-font-family
-                        :height 1.0)
+                        :height 1.05)
     (set-face-attribute 'fixed-pitch nil
                         :family tiyano/monospace-font-family
                         :height 1.0))
