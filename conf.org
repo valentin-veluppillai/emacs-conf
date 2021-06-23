@@ -870,6 +870,34 @@ be selected.
 #+RESULTS:
 : t
    
+** Fuzzy File Finder
+
+~affe~
+
+#+begin_src emacs-lisp
+  (use-package affe
+    :after orderless
+    :bind ("C-x M-f" . affe-find)
+    :custom
+    ;; Configure Orderless
+    ((affe-regexp-function #'orderless-pattern-compiler)
+     (affe-highlight-function #'orderless-highlight-matches))
+    :config
+    ;; Manual preview key for `affe-grep'
+    (consult-customize affe-grep :preview-key (kbd "M-.")))
+#+end_src
+
+#+RESULTS:
+: affe-find
+
+** Disable the Mouse
+
+#+name: no-mouse
+#+begin_src emacs-lisp
+  (use-package disable-mouse
+    :config (global-disable-mouse-mode))
+#+end_src
+
 * The Toolkit
 :PROPERTIES:
 :header-args: :tangle lisp/toolkit.el
