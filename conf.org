@@ -299,11 +299,13 @@ See wich line you are on, and what line that is.
 
 #+name: line-hl-numbers
 #+begin_src emacs-lisp
-  (use-package emacs
-    :config
-    (global-display-line-numbers-mode t)
-    (global-hl-line-mode t)
-    :custom (display-line-numbers-type 'relative))
+    (use-package emacs
+      :config
+      (global-display-line-numbers-mode t)
+      (global-hl-line-mode t)
+      :custom ((display-line-numbers-type 'relative)
+               (display-line-numbers-grow-only t)
+               (display-line-numbers-width-start t)))
 #+end_src
 
 #+RESULTS: line-hl-numbers
