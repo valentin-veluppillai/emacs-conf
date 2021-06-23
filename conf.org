@@ -202,8 +202,8 @@ so that I can trigger it for shorter prefixes.
       :if (display-graphic-p)
       :hook (company-mode . company-box-mode))
     :custom
-    ((company-idle-delay 0.3)
-     (company-minimum-prefix-length 3)
+    ((company-idle-delay 0)
+     (company-minimum-prefix-length 1)
      (company-selection-wrap-around t)))
 #+end_src
    
