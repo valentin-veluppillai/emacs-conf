@@ -1274,33 +1274,46 @@ readability and good customizaion. Also, they use a lot of purple,
 which is always a plus.
 
 #+begin_src emacs-lisp
-  (use-package modus-themes
-    :init
-    (setq modus-themes-bold-constructs t
-          modus-themes-slanted-constructs t
-          modus-themes-syntax 'green-strings
-          modus-themes-links 'faint
-          modus-themes-prompts 'subtle-accented
-          modus-themes-mode-line 'borderless
-          modus-themes-completions 'opinionated
-          modus-themes-fringes nil
-          modus-themes-lang-checkers 'straight-underline
-          modus-themes-hl-line 'nil
-          modus-themes-subtle-line-numbers t
-          modus-themes-paren-match 'intense-bold
-          modus-themes-region 'bg-only
-          modus-themes-org-blocks nil
-          modus-themes-headings nil
-          modus-themes-variable-pitch-ui nil
-          modus-themes-variable-pitch-headings nil)
-    (modus-themes-load-themes)
-    :config
-    (modus-themes-load-vivendi)
-    :bind ("<f6>" . modus-themes-toggle))
+    (use-package modus-themes
+      :init
+      (setq modus-themes-bold-constructs t
+            modus-themes-slanted-constructs t
+            modus-themes-syntax 'green-strings
+            modus-themes-links 'faint-neutral-underline
+            modus-themes-prompts 'subtle-accented
+            modus-themes-mode-line 'borderless-accented
+            modus-themes-completions 'opinionated
+            modus-themes-fringes 'nil
+            modus-themes-lang-checkers 'straight-underline
+            modus-themes-hl-line 'nil
+            modus-themes-subtle-line-numbers t
+            modus-themes-paren-match 'intense
+            modus-themes-region 'bg-only
+            modus-themes-org-blocks 'gray-background
+            modus-themes-org-agenda '((header-block . (scale-title variable-pitch))
+                                      (header-date . (grayscale workaholic bold-today))
+                                      (scheduled . uniform)
+                                      (habit . traffic-light))
+            modus-themes-headings '((t . nil))
+            modus-themes-variable-pitch-ui nil
+            modus-themes-variable-pitch-headings t
+            modus-themes-scale-headings t)
+      (modus-themes-load-themes)
+      :config
+      (modus-themes-load-vivendi)
+      :bind ("<f6>" . modus-themes-toggle))
 #+end_src 
 
 #+RESULTS:
 : modus-themes-toggle
+** Active Buffer Highlighting
+#+begin_src emacs-lisp
+  (use-package solaire-mode
+    :config (solaire-global-mode 1))
+#+end_src
+
+#+RESULTS:
+: t
 
 * The Desktop Environment
 :PROPERTIES:
