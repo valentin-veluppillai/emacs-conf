@@ -490,6 +490,21 @@ Flycheck! Check Syntax in all programming buffers.
     :hook (prog-mode . flycheck-pos-tip-mode))
 #+END_SRC
 
+** Syntax Highlighting
+
+I use ~tree-sitter~ for better syntax highlighting, which uses syntax trees instead of regexps.
+
+#+begin_src emacs-lisp
+      (use-package tree-sitter
+        :config
+        (use-package tree-sitter-langs)
+        (global-tree-sitter-mode 1)
+        :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+#+end_src
+
+#+RESULTS:
+| tree-sitter-hl-mode |
+
 ** Undo/Redo
 I never got used to these standard bindings, and because emacs is also my window
 manager, I don't care about suspending it.
