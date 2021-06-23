@@ -142,12 +142,30 @@ Lastly, load the files.
 
 #+name: load-config-files
 #+begin_src emacs-lisp
-  (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-  (mapc 'load tiyano/config-file-list)
+  (let ((gc-cons-threshold most-positive-fixnum))
+    (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+    (mapc 'load tiyano/config-file-list))
 #+end_src
 
 #+RESULTS: load-config-files
 | editor | interface | toolkit | visuals | de |
+
+** Some other general things
+
+Like the garbage collector threshhold.
+
+#+name: gc
+#+begin_src emacs-lisp
+  (use-package gcmh
+    :config (gcmh-mode 1)
+    :bind (("<f8>" . profiler-start)
+           ("<f9>" . profiler-stop)))
+
+
+#+end_src
+
+#+RESULTS: gc
+: profiler-stop
 
 * The Editor
 :PROPERTIES:
