@@ -822,6 +822,17 @@ be selected.
   (unbind-key "C-x 2")
   (bind-key "C-x 2" 'tiyano/split-window-below-and-switch)
 #+end_src
+** Window Navigation
+
+#+name: window-navigation
+#+begin_src emacs-lisp
+    (use-package windmove
+      ;; :config (windmove-default-keybindings 'super)
+      :custom (windmove-wrap-around t))
+#+end_src
+
+#+RESULTS: window-navigation
+: t
 
 ** Project Handling
 
@@ -1280,88 +1291,94 @@ variable is set.
 
 #+name: window-manager
 #+begin_src emacs-lisp
-  (use-package exwm
-    :init
-    (require 'exwm-systemtray)
-    (exwm-systemtray-enable)
+          (use-package exwm
+            :init
+            (require 'exwm-systemtray)
+            (exwm-systemtray-enable)
 
-    (use-package exwm-edit)
+            (use-package exwm-edit)
 
-    (use-package cannon
-      :straight (:host github :repo "lambdart/cannon"))
+            (use-package cannon
+              :straight (:host github :repo "lambdart/cannon"))
 
-    (use-package gpastel
-      :hook (gpastel-mode . exwm-init-hook))
+            (use-package gpastel
+              :hook (gpastel-mode . exwm-init-hook))
 
-    (defun start-applets ()
-      "Start a few applets, like nm-applet"
-      (start-process-shell-command
-       "Network Manager Applet" nil "nm-applet")
-      (start-process-shell-command
-       "PulseAudio Applet" nil "pasystray")
-      (start-process-shell-command
-       "Blueman Applet" nil "blueman-applet")
-      (start-process-shell-command
-       "lemonbar" nil "~/.config/lemonbar/bar.sh | lemonbar -g x36 -f \"IBM Plex Mono Semibold\" -f \"Symbols Nerd Font\" -F \"#ebdbb2\" -B \"#282828\" -u 4 -U \"#b16286\" &")
-      (start-process-shell-command
-       "dunst" nil "dunst")
-      (start-process-shell-command
-       "gpaste" nil "gpaste-client start"))
+            (defun start-applets ()
+              "Start a few applets, like nm-applet"
+              (start-process-shell-command
+               "Network Manager Applet" nil "nm-applet")
+              (start-process-shell-command
+               "PulseAudio Applet" nil "pasystray")
+              (start-process-shell-command
+               "Blueman Applet" nil "blueman-applet")
+              (start-process-shell-command
+               "lemonbar" nil "~/.config/lemonbar/bar.sh | lemonbar -g x36 -f \"IBM Plex Mono Semibold\" -f \"Symbols Nerd Font\" -F \"#ebdbb2\" -B \"#282828\" -u 4 -U \"#b16286\" &")
+              (start-process-shell-command
+               "dunst" nil "dunst")
+              (start-process-shell-command
+               "gpaste" nil "gpaste-client start"))
 
-    (defun tiyano/kill-x-buffer ()
-      "Kill current buffer and its associated window if its an X buffer"
-      (interactive)
-      (if (eq major-mode "exwm-mode") ;; is x buffer
-          ((kill-this-buffer) ;; kill this buffer and close window
-           (delete-window))
-        (message "Not an X buffer")))
+            (defun tiyano/kill-x-buffer ()
+              "Kill current buffer and its associated window if its an X buffer"
+              (interactive)
+              (if (eq major-mode "exwm-mode") ;; is x buffer
+                  ((kill-this-buffer) ;; kill this buffer and close window
+                   (delete-window))
+                (message "Not an X buffer")))
 
-    (start-applets)
+            (start-applets)
 
-    :hook
-    (exwm-update-class . (lambda () (exwm-workspace-rename-buffer exwm-class-name)))
+            :hook
+            (exwm-update-class . (lambda () (exwm-workspace-rename-buffer exwm-class-name)))
 
-    :custom
-    (exwm-layout-show-all-buffers t)
-    (exwm-workspace-show-all-buffers t)
-    (exwm-input-global-keys
-     `(([?\s-W] . exwm-workspace-switch)
-       ([?\s-c] . tiyano/kill-x-buffer)
-       ([s-return] . multi-vterm)
-       ([s-tab] . vterm)
-       ([?\s-e] . dired-jump)
-       ([?\s-T] . exwm-reset)
-       ([?\s-f] . exwm-layout-toggle-fullscreen)
-       ([?\s- ] . cannon-launch)
-       ([?\s-0] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
-       ([?\s-1] . (lambda () (interactive) (exwm-workspace-switch-create 1)))
-       ([?\s-2] . (lambda () (interactive) (exwm-workspace-switch-create 2)))
-       ([?\s-3] . (lambda () (interactive) (exwm-workspace-switch-create 3)))
-       ([?\s-4] . (lambda () (interactive) (exwm-workspace-switch-create 4)))
-       ([?\s-5] . (lambda () (interactive) (exwm-workspace-switch-create 5)))
-       ([?\s-6] . (lambda () (interactive) (exwm-workspace-switch-create 6)))
-       ([?\s-7] . (lambda () (interactive) (exwm-workspace-switch-create 7)))
-       ([?\s-8] . (lambda () (interactive) (exwm-workspace-switch-create 8)))
-       ([?\s-9] . (lambda () (interactive) (exwm-workspace-switch-create 9)))))
-    (exwm-input-simulation-keys
-     '(([?\C-w] . [?\C-x])
-       ([?\M-w] . [?\C-c])
-       ([?\C-y] . [?\C-v])
-       ([?\C-b] . [left])
-       ([?\C-f] . [right])
-       ([?\C-p] . [up])
-       ([?\C-n] . [down])
-       ([?\C-a] . [home])
-       ([?\C-e] . [end])
-       ([?\M-v] . [prior])
-       ([?\C-v] . [next])
-       ([?\C-d] . [delete])
-       ([?\C-k] . [S-end delete])
-       ([?\C-s] . [?\C-f])))
-    :config (exwm-enable))
+            :custom
+            (exwm-layout-show-all-buffers t)
+            (exwm-workspace-show-all-buffers t)
+            (exwm-input-global-keys
+             `(([?\s-W] . exwm-workspace-switch)
+               ([?\s-c] . tiyano/kill-x-buffer)
+               ([s-return] . multi-vterm)
+               ([s-tab] . vterm)
+               ([?\s-e] . dired-jump)
+               ([?\s-T] . exwm-reset)
+               ([?\s-f] . exwm-layout-toggle-fullscreen)
+               ([?\s- ] . cannon-launch)
+               ([?\s-0] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+               ([?\s-1] . (lambda () (interactive) (exwm-workspace-switch-create 1)))
+               ([?\s-2] . (lambda () (interactive) (exwm-workspace-switch-create 2)))
+               ([?\s-3] . (lambda () (interactive) (exwm-workspace-switch-create 3)))
+               ([?\s-4] . (lambda () (interactive) (exwm-workspace-switch-create 4)))
+               ([?\s-5] . (lambda () (interactive) (exwm-workspace-switch-create 5)))
+               ([?\s-6] . (lambda () (interactive) (exwm-workspace-switch-create 6)))
+               ([?\s-7] . (lambda () (interactive) (exwm-workspace-switch-create 7)))
+               ([?\s-8] . (lambda () (interactive) (exwm-workspace-switch-create 8)))
+               ([?\s-9] . (lambda () (interactive) (exwm-workspace-switch-create 9)))
+               ([s-right] . windmove-right)
+               ([s-left] . windmove-left)
+               ([s-up] . windmove-up)
+               ([s-down] . windmove-down)))
+            (exwm-input-simulation-keys
+             '(([?\C-w] . [?\C-x])
+               ([?\M-w] . [?\C-c])
+               ([?\C-y] . [?\C-v])
+               ([?\C-b] . [left])
+               ([?\C-f] . [right])
+               ([?\C-p] . [up])
+               ([?\C-n] . [down])
+               ([?\C-a] . [home])
+               ([?\C-e] . [end])
+               ([?\M-v] . [prior])
+               ([?\C-v] . [next])
+               ([?\C-d] . [delete])
+               ([?\C-k] . [S-end delete])
+               ([?\C-s] . [?\C-f])))
+            :config (exwm-enable))
 #+end_src
 
 #+RESULTS: window-manager
+| lambda  | nil | (exwm-workspace-rename-buffer exwm-class-name) |                                                |
+| closure | (t) | nil                                            | (exwm-workspace-rename-buffer exwm-class-name) |
 ** System Monitor
 
 I'd love this, but this doesn't work for some reason.
