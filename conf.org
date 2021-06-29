@@ -342,7 +342,10 @@ framework.
     :defer t
     :hook (lsp-mode . lsp-enable-which-key-integration)
     :commands (lsp lsp-deferred)
-    :custom (lsp-keymap-perfix "C-c l")
+    :custom ((lsp-keymap-perfix "C-c l")
+             (gc-cons-threshold 100000000)
+             (read-process-output-max 1048576)
+             (lsp-idle-delay 0.5))
     :config
     (use-package lsp-ui
       :defer t
@@ -365,6 +368,8 @@ provides modes for it and a bunch of other languages.
 #+name: c-lang
 #+begin_src emacs-lisp
   (use-package cc-mode
+    :demand
+    :after lsp-mode
     :straight (:type built-in)
     :hook ((c-mode c++-mode)  . lsp-mode))
 #+end_src
@@ -818,7 +823,7 @@ Use ~marginalia~ for a more informative minbuffers.
     :config (minions-mode))
 #+end_src
 
-
+** Transient Commands
 ** Window Splitting
 
 When I split my Window using the standard keybinds ~C-x 3~ or ~C-x 2~,
@@ -919,7 +924,7 @@ of its capabilities.
 #+begin_src emacs-lisp
   (use-package org
     :straight (:type built-in)
-    :custom ((org-todo-keywords '((sequence "TODO(t)" "IN PROGRESS(p!/!)" "WAIT(w)" "DELEGATED(e)" "|" "DONE(d)")
+    :custom ((org-todo-keywords '((sequence "TODO(t)" "IN PROGRESS(p)" "WAIT(w)" "DELEGATED(e)" "|" "DONE(d)")
                                   (sequence "LEARN(l)" "|" "REHEARSE(r)")
                                   (sequence "|" "CANCELED(c@)")))
              (org-log-into-drawer t)))
@@ -1173,19 +1178,32 @@ Use [org-superstar] for fancier headings.
 I also hide source block markup, but I am not sure wheter I actually prefer
 it over seeing org markup.
 
-#+name: hide-source-block-markup
+#+name: hide-markup
 #+begin_src emacs-lisp
   (use-package org
     :straight (:type built-in)
-    :config
-    (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "[")
-                                           ("#+END_SRC" . "]")
-                                           ("#+begin_src" . "[")
-                                           ("#+end_src" . "]")
-                                           ("#+RESULTS:" . ">")))
-    (setq prettify-symbols-unprettify-at-point 'right-edge)
-    (add-hook 'org-mode-hook 'prettify-symbols-mode))
+    :custom (org-hide-emphasis-markers t)
+    :config (use-package org-superstar
+            :custom ((org-hide-emphasis-markers t)
+                     (org-superstar-headline-bullets-list '("◉" ("🞛" ?◈) "○" "▷"))
+                     (org-superstar-cycle-headline-bullets nil)
+                     (org-superstar-leading-fallback ?\s))))
 #+end_src
+
+#+RESULTS: hide--markup
+
+***** Variable Pitch
+
+#+name: var-pitch
+#+begin_src emacs-lisp
+  (use-package org
+    :disabled
+    :straight (:type built-in)
+    :hook ((org-mode . visual-line-mode)
+           (org-mode . variable-pitch-mode)))
+#+end_src
+
+#+RESULTS: var-pitch
 
 *** Dealing with Code
 
